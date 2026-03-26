@@ -7,7 +7,9 @@ It builds on Discourse's existing [category group moderation](https://meta.disco
 ## How it works
 
 1. Create a group and add your users to it
-2. Assign that group as a **moderation group** on a category (category settings > moderating groups)
+
+2. Go to category, press the wrench, then add the group to "In addition to staff, content in this category can also be reviewed by:".
+
 3. Those users can now manage categories
 
 By default, users can only manage the specific categories their group is assigned to. Enable `mini_mod_manage_all_categories` to let them manage all categories.
