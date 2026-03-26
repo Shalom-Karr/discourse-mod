@@ -1,0 +1,4 @@
+discourse_mini_mod:
+  mini_mod_enabled:
+    default: false
+    client: true
