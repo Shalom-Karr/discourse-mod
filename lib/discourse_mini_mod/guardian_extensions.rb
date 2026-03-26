@@ -5,12 +5,15 @@ module DiscourseMiniMod
     def can_create_category?(parent = nil)
       return true if super
       return false if !SiteSetting.mini_mod_enabled
-      return false if anonymous?
+      return false if !category_group_moderation_allowed?
+      return false if !category_group_moderator_scope.exists?
+
+      return true if SiteSetting.mini_mod_manage_all_categories
 
       if parent
         is_category_group_moderator?(parent)
       else
-        category_group_moderation_allowed? && category_group_moderator_scope.exists?
+        true
       end
     end
 
@@ -18,7 +21,11 @@ module DiscourseMiniMod
       return true if super
       return false if !SiteSetting.mini_mod_enabled
 
-      is_category_group_moderator?(category)
+      if SiteSetting.mini_mod_manage_all_categories
+        category_group_moderation_allowed? && category_group_moderator_scope.exists?
+      else
+        is_category_group_moderator?(category)
+      end
     end
 
     def can_edit_serialized_category?(category_id:, read_restricted:)
@@ -26,7 +33,11 @@ module DiscourseMiniMod
       return false if !SiteSetting.mini_mod_enabled
       return false if !category_group_moderation_allowed?
 
-      category_group_moderator_scope.where(id: category_id).exists?
+      if SiteSetting.mini_mod_manage_all_categories
+        category_group_moderator_scope.exists?
+      else
+        category_group_moderator_scope.where(id: category_id).exists?
+      end
     end
   end
 end

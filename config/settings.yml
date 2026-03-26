@@ -2,3 +2,6 @@ discourse_mini_mod:
   mini_mod_enabled:
     default: false
     client: true
+  mini_mod_manage_all_categories:
+    default: false
+    client: true

@@ -91,4 +91,39 @@ RSpec.describe DiscourseMiniMod::GuardianExtensions do
       ).to eq(false)
     end
   end
+
+  context "with mini_mod_manage_all_categories enabled" do
+    before { SiteSetting.mini_mod_manage_all_categories = true }
+
+    it "allows creating subcategories under any category" do
+      other_category = Fabricate(:category)
+      expect(Guardian.new(user).can_create_category?(other_category)).to eq(true)
+    end
+
+    it "allows editing any category" do
+      other_category = Fabricate(:category)
+      expect(Guardian.new(user).can_edit_category?(other_category)).to eq(true)
+    end
+
+    it "allows deleting any empty category" do
+      other_category = Fabricate(:category)
+      expect(Guardian.new(user).can_delete_category?(other_category)).to eq(true)
+    end
+
+    it "allows editing serialized categories the user does not moderate" do
+      other_category = Fabricate(:category)
+      guardian = Guardian.new(user)
+      expect(
+        guardian.can_edit_serialized_category?(
+          category_id: other_category.id,
+          read_restricted: false,
+        ),
+      ).to eq(true)
+    end
+
+    it "still requires the user to be in a category moderation group" do
+      other_user = Fabricate(:user)
+      expect(Guardian.new(other_user).can_edit_category?(category)).to eq(false)
+    end
+  end
 end
