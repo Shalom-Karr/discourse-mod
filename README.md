@@ -1,29 +1,46 @@
 # discourse-mini-mod
 
-A Discourse plugin that allows regular users (any trust level) to create, edit, and delete categories — without requiring moderator or admin status.
+> Mini-mods can rearrange the shelves. Moderators can kick people out of the store.
+
+A Discourse plugin that gives regular users the power to manage categories, tags, and topics — without requiring moderator or admin status.
 
 It builds on Discourse's existing [category group moderation](https://meta.discourse.org/t/category-moderation/203504) feature by extending the permissions it grants.
 
 ## How it works
 
 1. Create a group and add your users to it
+2. Go to a category, press the wrench, then add the group to "In addition to staff, content in this category can also be reviewed by:"
+3. Enable `mini_mod_enabled` in site settings
+4. Those users can now manage categories they moderate
 
-2. Go to category, press the wrench, then add the group to "In addition to staff, content in this category can also be reviewed by:".
-
-3. Those users can now manage categories
-
-By default, users can only manage the specific categories their group is assigned to. Enable `mini_mod_manage_all_categories` to let them manage all categories.
-
-Moving other users' posts is already handled by Discourse core's category group moderation — no plugin needed.
+Optionally enable `mini_mod_manage_all_categories` to let them manage **all** categories and move topics between any categories. Enable `mini_mod_manage_tags` to let them create, edit, and delete tags.
 
 ## Settings
 
 | Setting | Default | Description |
 |---------|---------|-------------|
 | `mini_mod_enabled` | `false` | Enable the plugin |
-| `mini_mod_manage_all_categories` | `false` | Allow category group moderators to manage all categories, not just the ones they moderate |
+| `mini_mod_manage_all_categories` | `false` | Allow category group moderators to manage all categories and edit/move topics across all categories |
+| `mini_mod_manage_tags` | `false` | Allow category group moderators to create, edit, and delete tags |
 
-Both settings require Discourse core's `enable_category_group_moderation` to also be enabled.
+All settings require Discourse core's `enable_category_group_moderation` to also be enabled. Tag management also requires `tagging_enabled`.
+
+## Permissions granted
+
+| Action | Default (per-category) | With manage all categories | With manage tags |
+|--------|----------------------|-----------------|-----------------|
+| Create categories | Subcategories under moderated categories, or top-level | All categories | — |
+| Edit categories | Only moderated categories | All categories | — |
+| Delete categories | Only moderated categories (must be empty, no children) | All categories (same constraints) | — |
+| Edit topics | Only in moderated categories (core feature) | All visible topics | — |
+| Bulk change topic category | To/from moderated categories | Any visible category | — |
+| Move posts | In moderated categories (core feature) | In moderated categories (core feature) | — |
+| Create tags | — | — | Yes |
+| Edit/rename tags | — | — | Yes |
+| Delete tags | — | — | Yes |
+| Manage tag synonyms | — | — | Yes |
+
+See [docs/](docs/) for detailed documentation, including a [comparison of mini-mods vs moderators](docs/comparison.md).
 
 ## Installation
 
@@ -43,12 +60,3 @@ Then rebuild the container:
 ```
 ./launcher rebuild app
 ```
-
-## Permissions granted
-
-| Action | Default (per-category) | With manage all |
-|--------|----------------------|-----------------|
-| Create categories | Subcategories under moderated categories, or top-level if moderating any | All categories |
-| Edit categories | Only moderated categories | All categories |
-| Delete categories | Only moderated categories (must be empty, no children) | All categories (same constraints) |
-| Move posts | All posts in moderated categories (core feature) | All posts in moderated categories (core feature) |
