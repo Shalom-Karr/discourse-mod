@@ -2,3 +2,4 @@ en:
   site_settings:
     mini_mod_enabled: "Allow category group moderators to create and edit categories they moderate."
     mini_mod_manage_all_categories: "Allow category group moderators to manage all categories, not just the ones they moderate."
+    mini_mod_manage_tags: "Allow category group moderators to create, edit, and delete tags."

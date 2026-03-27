@@ -5,3 +5,6 @@ discourse_mini_mod:
   mini_mod_manage_all_categories:
     default: false
     client: true
+  mini_mod_manage_tags:
+    default: false
+    client: true

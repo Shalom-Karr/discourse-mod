@@ -126,4 +126,106 @@ RSpec.describe DiscourseMiniMod::GuardianExtensions do
       expect(Guardian.new(other_user).can_edit_category?(category)).to eq(false)
     end
   end
+
+  describe "#can_move_topic_to_category?" do
+    it "allows moving topics to a moderated category" do
+      expect(Guardian.new(user).can_move_topic_to_category?(category)).to eq(true)
+    end
+
+    it "does not allow moving topics to an unmoderated category" do
+      other_category = Fabricate(:category)
+      expect(Guardian.new(user).can_move_topic_to_category?(other_category)).to eq(false)
+    end
+
+    it "does not allow when plugin is disabled" do
+      SiteSetting.mini_mod_enabled = false
+      expect(Guardian.new(user).can_move_topic_to_category?(category)).to eq(false)
+    end
+
+    it "does not allow when category group moderation is disabled" do
+      SiteSetting.enable_category_group_moderation = false
+      expect(Guardian.new(user).can_move_topic_to_category?(category)).to eq(false)
+    end
+
+    context "with mini_mod_manage_all_categories enabled" do
+      before { SiteSetting.mini_mod_manage_all_categories = true }
+
+      it "allows moving topics to any visible category" do
+        other_category = Fabricate(:category)
+        expect(Guardian.new(user).can_move_topic_to_category?(other_category)).to eq(true)
+      end
+
+      it "does not allow moving to a category the user cannot see" do
+        restricted = Fabricate(:category, read_restricted: true)
+        expect(Guardian.new(user).can_move_topic_to_category?(restricted)).to eq(false)
+      end
+    end
+  end
+
+  context "with mini_mod_manage_tags enabled" do
+    before do
+      SiteSetting.tagging_enabled = true
+      SiteSetting.mini_mod_manage_tags = true
+    end
+
+    describe "#can_admin_tags?" do
+      it "allows category group moderators to admin tags" do
+        expect(Guardian.new(user).can_admin_tags?).to eq(true)
+      end
+
+      it "does not allow when plugin is disabled" do
+        SiteSetting.mini_mod_enabled = false
+        expect(Guardian.new(user).can_admin_tags?).to eq(false)
+      end
+
+      it "does not allow when manage_tags is disabled" do
+        SiteSetting.mini_mod_manage_tags = false
+        expect(Guardian.new(user).can_admin_tags?).to eq(false)
+      end
+
+      it "does not allow when tagging is disabled" do
+        SiteSetting.tagging_enabled = false
+        expect(Guardian.new(user).can_admin_tags?).to eq(false)
+      end
+
+      it "does not allow users not in a category moderation group" do
+        other_user = Fabricate(:user)
+        expect(Guardian.new(other_user).can_admin_tags?).to eq(false)
+      end
+
+      it "does not allow when category group moderation is disabled" do
+        SiteSetting.enable_category_group_moderation = false
+        expect(Guardian.new(user).can_admin_tags?).to eq(false)
+      end
+    end
+
+    describe "#can_create_tag?" do
+      it "allows category group moderators to create tags" do
+        expect(Guardian.new(user).can_create_tag?).to eq(true)
+      end
+
+      it "does not allow when manage_tags is disabled" do
+        SiteSetting.mini_mod_manage_tags = false
+        expect(Guardian.new(user).can_create_tag?).to eq(false)
+      end
+    end
+
+    describe "#can_edit_tag_names?" do
+      it "allows category group moderators to edit tag names" do
+        expect(Guardian.new(user).can_edit_tag_names?).to eq(true)
+      end
+
+      it "does not allow when manage_tags is disabled" do
+        SiteSetting.mini_mod_manage_tags = false
+        expect(Guardian.new(user).can_edit_tag_names?).to eq(false)
+      end
+    end
+
+    describe "#can_edit_tag?" do
+      it "allows category group moderators to edit visible tags" do
+        tag = Fabricate(:tag)
+        expect(Guardian.new(user).can_edit_tag?(tag)).to eq(true)
+      end
+    end
+  end
 end

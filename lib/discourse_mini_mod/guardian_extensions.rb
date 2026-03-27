@@ -39,5 +39,47 @@ module DiscourseMiniMod
         category_group_moderator_scope.where(id: category_id).exists?
       end
     end
+
+    def can_move_topic_to_category?(category)
+      return true if super
+      return false if !SiteSetting.mini_mod_enabled
+      return false if !category_group_moderation_allowed?
+
+      category =
+        if Category === category
+          category
+        else
+          Category.find(category || SiteSetting.uncategorized_category_id)
+        end
+
+      if SiteSetting.mini_mod_manage_all_categories
+        category_group_moderator_scope.exists? && can_see_category?(category)
+      else
+        is_category_group_moderator?(category)
+      end
+    end
+
+    def can_admin_tags?
+      return true if super
+      mini_mod_tag_manager?
+    end
+
+    def can_create_tag?
+      return true if super
+      mini_mod_tag_manager?
+    end
+
+    def can_edit_tag_names?
+      return true if super
+      mini_mod_tag_manager?
+    end
+
+    private
+
+    def mini_mod_tag_manager?
+      SiteSetting.mini_mod_enabled && SiteSetting.mini_mod_manage_tags &&
+        SiteSetting.tagging_enabled && category_group_moderation_allowed? &&
+        category_group_moderator_scope.exists?
+    end
   end
 end
