@@ -39,4 +39,10 @@ after_initialize do
   reloadable_patch do
     ::Guardian.prepend(DiscourseMiniMod::GuardianExtensions)
   end
+
+  add_to_serializer(:current_user, :can_admin_tags) { scope.can_admin_tags? }
+
+  add_to_serializer(:current_user, :include_can_admin_tags?) do
+    SiteSetting.mini_mod_enabled && SiteSetting.mini_mod_manage_tags && SiteSetting.tagging_enabled
+  end
 end

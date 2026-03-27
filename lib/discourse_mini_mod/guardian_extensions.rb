@@ -40,6 +40,15 @@ module DiscourseMiniMod
       end
     end
 
+    def can_edit_topic?(topic)
+      return true if super
+      return false if !SiteSetting.mini_mod_enabled
+      return false if !SiteSetting.mini_mod_manage_all_categories
+      return false if !category_group_moderation_allowed?
+      return false if !category_group_moderator_scope.exists?
+      can_see?(topic) && !topic.first_post&.locked?
+    end
+
     def can_move_topic_to_category?(category)
       return true if super
       return false if !SiteSetting.mini_mod_enabled
