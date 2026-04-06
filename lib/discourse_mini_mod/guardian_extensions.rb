@@ -51,8 +51,7 @@ module DiscourseMiniMod
 
     def can_create_post_on_topic?(topic)
       if SiteSetting.mini_mod_enabled && !SiteSetting.mini_mod_can_post_in_closed_topics &&
-           topic.present? && topic.closed? && !is_staff? &&
-           !(authenticated? && user.has_trust_level?(TrustLevel[4]))
+           topic.present? && topic.closed? && !is_staff?
         return false
       end
       super
@@ -60,7 +59,20 @@ module DiscourseMiniMod
 
     def can_open_topic?(topic)
       if SiteSetting.mini_mod_enabled && !SiteSetting.mini_mod_can_reopen_topics &&
-           topic.present? && !is_staff? && !(authenticated? && user.has_trust_level?(TrustLevel[4]))
+           topic.present? && !is_staff?
+        return false
+      end
+      super
+    end
+
+    # Discourse routes both manual close and manual reopen through `can_close_topic?`
+    # (TopicsController#status -> ensure_can_close_topic!). The toggle direction is
+    # inferred from the topic's current state, so we block this Guardian check only
+    # when the topic is already closed — in that case, the action is a reopen, which
+    # we want to revoke from category group moderators by default.
+    def can_close_topic?(topic)
+      if SiteSetting.mini_mod_enabled && !SiteSetting.mini_mod_can_reopen_topics &&
+           topic.present? && topic.closed? && !is_staff?
         return false
       end
       super

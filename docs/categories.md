@@ -84,7 +84,8 @@ The plugin prepends Guardian extensions that override these methods:
 | `can_edit_topic?` | Editing topics in non-moderated categories (manage all mode only) |
 | `can_move_topic_to_category?` | Moving topics to a different category |
 | `can_create_post_on_topic?` | Replying on closed topics (blocked unless `mini_mod_can_post_in_closed_topics` is `true`) |
-| `can_open_topic?` | Reopening closed topics (blocked unless `mini_mod_can_reopen_topics` is `true`) |
+| `can_close_topic?` | Reopening closed topics via the manual close/reopen toggle (blocked unless `mini_mod_can_reopen_topics` is `true`); closing open topics still works |
+| `can_open_topic?` | Reopening closed topics via topic timers (blocked unless `mini_mod_can_reopen_topics` is `true`) |
 
 Most methods call `super` first — if the base Discourse permission allows it, the plugin doesn't interfere. The plugin only adds permissions, with two exceptions: `can_create_post_on_topic?` and `can_open_topic?` revoke specific core "trusted user" privileges from category group moderators by default. Either can be restored with the corresponding site setting.
 

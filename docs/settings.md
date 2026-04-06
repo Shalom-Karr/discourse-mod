@@ -53,11 +53,12 @@ The restriction is narrowly scoped:
 
 Controls whether category group moderators can **reopen** closed topics in categories they moderate. Defaults to `false`, which overrides Discourse core's default behavior — core normally lets category group moderators close, archive, and reopen topics in their categories. The plugin revokes only the reopen ability.
 
-When set to `true`, the plugin's override falls through to core and category group moderators regain the ability to reopen closed topics in their categories.
+When set to `true`, the plugin's overrides fall through to core and category group moderators regain the ability to reopen closed topics in their categories.
 
 The restriction is narrowly scoped:
 
-- Only `can_open_topic?` is touched. Closing, archiving, pinning, splitting, merging, and all other topic actions remain available to category group moderators in their categories.
+- Only the reopen action is blocked. Closing open topics still works, as do archiving, pinning, splitting, merging, and every other topic action.
+- Two Guardian methods are overridden to cover both reopen paths: `can_close_topic?` (the manual UI toggle, since Discourse routes both close and reopen through this method and infers direction from `topic.closed?`) and `can_open_topic?` (the topic-timer reopen path used by `Jobs::OpenTopic`).
 - Site staff (admins, moderators) are not affected.
 - Topics outside the moderator's categories were never reachable to begin with — core blocks that.
 

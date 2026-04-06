@@ -171,11 +171,6 @@ RSpec.describe DiscourseMiniMod::GuardianExtensions do
       expect(Guardian.new(user).can_create_post_on_topic?(open_topic)).to eq(true)
     end
 
-    it "does not affect trust level 4 users" do
-      tl4_user = Fabricate(:user, trust_level: TrustLevel[4])
-      expect(Guardian.new(tl4_user).can_create_post_on_topic?(closed_topic)).to eq(true)
-    end
-
     it "does not affect site moderators" do
       expect(Guardian.new(Fabricate(:moderator)).can_create_post_on_topic?(closed_topic)).to eq(
         true,
@@ -196,16 +191,45 @@ RSpec.describe DiscourseMiniMod::GuardianExtensions do
     end
   end
 
+  describe "#can_close_topic?" do
+    fab!(:closed_topic) { Fabricate(:topic, category: category, closed: true) }
+    fab!(:open_topic) { Fabricate(:topic, category: category) }
+
+    # Discourse routes manual reopen through can_close_topic? (the controller infers
+    # direction from topic.closed?), so the reopen restriction has to live here too.
+    it "allows category group moderators to close open topics they moderate" do
+      expect(Guardian.new(user).can_close_topic?(open_topic)).to eq(true)
+    end
+
+    it "blocks category group moderators from reopening closed topics by default" do
+      expect(Guardian.new(user).can_close_topic?(closed_topic)).to eq(false)
+    end
+
+    it "does not affect site moderators" do
+      expect(Guardian.new(Fabricate(:moderator)).can_close_topic?(closed_topic)).to eq(true)
+    end
+
+    it "is a no-op when the plugin is disabled" do
+      SiteSetting.mini_mod_enabled = false
+      expect(Guardian.new(user).can_close_topic?(closed_topic)).to eq(true)
+    end
+
+    context "when mini_mod_can_reopen_topics is enabled" do
+      before { SiteSetting.mini_mod_can_reopen_topics = true }
+
+      it "allows category group moderators to reopen closed topics they moderate" do
+        expect(Guardian.new(user).can_close_topic?(closed_topic)).to eq(true)
+      end
+    end
+  end
+
   describe "#can_open_topic?" do
     fab!(:closed_topic) { Fabricate(:topic, category: category, closed: true) }
 
+    # can_open_topic? gates the timer-based reopen path (Jobs::OpenTopic).
+    # The manual reopen path goes through can_close_topic? (see above).
     it "blocks category group moderators from reopening closed topics by default" do
       expect(Guardian.new(user).can_open_topic?(closed_topic)).to eq(false)
-    end
-
-    it "does not affect trust level 4 users" do
-      tl4_user = Fabricate(:user, trust_level: TrustLevel[4])
-      expect(Guardian.new(tl4_user).can_open_topic?(closed_topic)).to eq(true)
     end
 
     it "does not affect site moderators" do
