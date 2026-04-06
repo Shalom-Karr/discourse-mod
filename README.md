@@ -4,7 +4,7 @@
 
 A Discourse plugin that gives regular users the power to manage categories, tags, and topics — without requiring moderator or admin status.
 
-It builds on Discourse's existing [category group moderation](https://meta.discourse.org/t/category-moderation/203504) feature by extending the permissions it grants.
+It builds on Discourse's existing category group moderation feature by extending the permissions it grants.
 
 ## How it works
 
@@ -41,6 +41,15 @@ All settings require Discourse core's `enable_category_group_moderation` to also
 | Edit/rename tags | — | — | Yes |
 | Delete tags | — | — | Yes |
 | Manage tag synonyms | — | — | Yes |
+
+Two additional capabilities are **off by default** but can be granted by enabling the corresponding site setting:
+
+| Action | Default | Granted by |
+|--------|---------|------------|
+| Reply on closed topics in moderated categories | Off | `mini_mod_can_post_in_closed_topics: true` |
+| Reopen closed topics in moderated categories | Off | `mini_mod_can_reopen_topics: true` |
+
+Closing open topics, archiving, pinning, splitting/merging, and every other moderation action remain available to mini-mods in their categories regardless of these settings.
 
 See [docs/](docs/) for detailed documentation, including a [comparison of mini-mods vs moderators](docs/comparison.md).
 

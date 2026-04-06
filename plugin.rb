@@ -9,6 +9,7 @@
 # enabled_site_setting: mini_mod_enabled
 
 require_relative "lib/discourse_mini_mod/guardian_extensions"
+require_relative "lib/discourse_mini_mod/topic_extension"
 require_relative "lib/discourse_mini_mod/topic_view_details_serializer_extension"
 
 # Load the admin JS bundle for category group moderators so they can access
@@ -41,6 +42,7 @@ end
 after_initialize do
   reloadable_patch do
     ::Guardian.prepend(DiscourseMiniMod::GuardianExtensions)
+    ::Topic.prepend(DiscourseMiniMod::TopicExtension)
     ::TopicViewDetailsSerializer.prepend(DiscourseMiniMod::TopicViewDetailsSerializerExtension)
   end
 
