@@ -51,7 +51,7 @@ module DiscourseMiniMod
 
     def can_create_post_on_topic?(topic)
       if SiteSetting.mini_mod_enabled && !SiteSetting.mini_mod_can_post_in_closed_topics &&
-           topic.present? && topic.closed? && !is_staff?
+           topic.present? && topic.closed? && !is_staff? && mini_mod_for?(topic)
         return false
       end
       super
@@ -59,7 +59,7 @@ module DiscourseMiniMod
 
     def can_open_topic?(topic)
       if SiteSetting.mini_mod_enabled && !SiteSetting.mini_mod_can_reopen_topics &&
-           topic.present? && !is_staff?
+           topic.present? && !is_staff? && mini_mod_for?(topic)
         return false
       end
       super
@@ -72,7 +72,7 @@ module DiscourseMiniMod
     # we want to revoke from category group moderators by default.
     def can_close_topic?(topic)
       if SiteSetting.mini_mod_enabled && !SiteSetting.mini_mod_can_reopen_topics &&
-           topic.present? && topic.closed? && !is_staff?
+           topic.present? && topic.closed? && !is_staff? && mini_mod_for?(topic)
         return false
       end
       super
@@ -113,6 +113,14 @@ module DiscourseMiniMod
     end
 
     private
+
+    # True when the current user is a category group moderator for the given
+    # topic's category. Used by the closed-topic restrictions to scope them to
+    # actual mini-mods rather than to every non-staff user core would otherwise
+    # treat as trusted (e.g. trust level 4).
+    def mini_mod_for?(topic)
+      topic.category.present? && is_category_group_moderator?(topic.category)
+    end
 
     def mini_mod_tag_manager?
       SiteSetting.mini_mod_enabled && SiteSetting.mini_mod_manage_tags &&

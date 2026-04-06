@@ -9,6 +9,7 @@
 # enabled_site_setting: mini_mod_enabled
 
 require_relative "lib/discourse_mini_mod/guardian_extensions"
+require_relative "lib/discourse_mini_mod/topic_view_details_serializer_extension"
 
 # Load the admin JS bundle for category group moderators so they can access
 # the category edit/create routes (which live in the admin bundle).
@@ -38,7 +39,10 @@ register_html_builder("server:before-head-close") do |controller|
 end
 
 after_initialize do
-  reloadable_patch { ::Guardian.prepend(DiscourseMiniMod::GuardianExtensions) }
+  reloadable_patch do
+    ::Guardian.prepend(DiscourseMiniMod::GuardianExtensions)
+    ::TopicViewDetailsSerializer.prepend(DiscourseMiniMod::TopicViewDetailsSerializerExtension)
+  end
 
   add_to_serializer(:current_user, :can_admin_tags) { scope.can_admin_tags? }
 
