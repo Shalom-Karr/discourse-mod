@@ -58,6 +58,14 @@ module DiscourseMiniMod
       super
     end
 
+    def can_open_topic?(topic)
+      if SiteSetting.mini_mod_enabled && !SiteSetting.mini_mod_can_reopen_topics &&
+           topic.present? && !is_staff? && !(authenticated? && user.has_trust_level?(TrustLevel[4]))
+        return false
+      end
+      super
+    end
+
     def can_move_topic_to_category?(category)
       return true if super
       return false if !SiteSetting.mini_mod_enabled

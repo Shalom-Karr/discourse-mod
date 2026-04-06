@@ -16,8 +16,9 @@ This compares a mini-mod user (all plugin settings enabled) with a Discourse mod
 
 | Ability | Moderator | Mini-mod | Notes |
 |---------|-----------|----------|-------|
-| Close/open topics | All | Moderated categories only | Core feature, not extended by plugin |
-| Reply on closed topics | All | Moderated categories (revocable) | Core feature; plugin can revoke via `mini_mod_can_post_in_closed_topics` |
+| Close topics | All | Moderated categories only | Core feature, not extended by plugin |
+| Reopen closed topics | All | Blocked by default | Plugin revokes; opt in via `mini_mod_can_reopen_topics` |
+| Reply on closed topics | All | Blocked by default | Plugin revokes; opt in via `mini_mod_can_post_in_closed_topics` |
 | Archive topics | All | Moderated categories only | Core feature |
 | Pin/unpin topics | All | Moderated categories only | Core feature |
 | Unlist/relist topics | All | Moderated categories only | Core feature |

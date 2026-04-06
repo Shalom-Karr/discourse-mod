@@ -9,5 +9,8 @@ discourse_mini_mod:
     default: false
     client: true
   mini_mod_can_post_in_closed_topics:
-    default: true
+    default: false
+    client: false
+  mini_mod_can_reopen_topics:
+    default: false
     client: false

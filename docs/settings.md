@@ -31,16 +31,35 @@ When enabled, category group moderators can create, edit, rename, and delete tag
 
 ### `mini_mod_can_post_in_closed_topics`
 
-- **Default:** `true`
+- **Default:** `false`
 - **Client:** no
 
-Controls whether category group moderators can reply on **closed** topics in categories they moderate. Defaults to `true` to preserve Discourse core's behavior — core treats category group moderators as "trusted" users who bypass the closed-topic posting block.
+Controls whether category group moderators can reply on **closed** topics in categories they moderate. Defaults to `false`, which overrides Discourse core's default behavior — core normally treats category group moderators as "trusted" users who bypass the closed-topic posting block. The plugin revokes that bypass.
 
-When set to `false`, the plugin overrides `Guardian#can_create_post_on_topic?` and revokes that bypass for category group moderators on closed topics. The restriction is narrowly scoped:
+When set to `true`, the plugin's override falls through to core and category group moderators regain the ability to reply on closed topics in their categories.
+
+The restriction is narrowly scoped:
 
 - Only `closed?` topics are affected — archived topics are left alone.
-- Site staff (admins, moderators) and trust level 4 users are not affected; they retain their independent ability to post on closed topics.
+- Site staff (admins, moderators) are not affected; they retain their independent ability to post on closed topics.
 - Only `can_create_post_on_topic?` is touched — every other category group moderator privilege (closing topics, editing topics, managing categories, etc.) is unchanged.
+
+**Requires:** `mini_mod_enabled`
+
+### `mini_mod_can_reopen_topics`
+
+- **Default:** `false`
+- **Client:** no
+
+Controls whether category group moderators can **reopen** closed topics in categories they moderate. Defaults to `false`, which overrides Discourse core's default behavior — core normally lets category group moderators close, archive, and reopen topics in their categories. The plugin revokes only the reopen ability.
+
+When set to `true`, the plugin's override falls through to core and category group moderators regain the ability to reopen closed topics in their categories.
+
+The restriction is narrowly scoped:
+
+- Only `can_open_topic?` is touched. Closing, archiving, pinning, splitting, merging, and all other topic actions remain available to category group moderators in their categories.
+- Site staff (admins, moderators) are not affected.
+- Topics outside the moderator's categories were never reachable to begin with — core blocks that.
 
 **Requires:** `mini_mod_enabled`
 

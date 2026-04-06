@@ -163,35 +163,65 @@ RSpec.describe DiscourseMiniMod::GuardianExtensions do
     fab!(:closed_topic) { Fabricate(:topic, category: category, closed: true) }
     fab!(:open_topic) { Fabricate(:topic, category: category) }
 
-    it "preserves the core category-group-moderator privilege by default" do
+    it "blocks category group moderators from posting on closed topics by default" do
+      expect(Guardian.new(user).can_create_post_on_topic?(closed_topic)).to eq(false)
+    end
+
+    it "still allows category group moderators to post on open topics" do
+      expect(Guardian.new(user).can_create_post_on_topic?(open_topic)).to eq(true)
+    end
+
+    it "does not affect trust level 4 users" do
+      tl4_user = Fabricate(:user, trust_level: TrustLevel[4])
+      expect(Guardian.new(tl4_user).can_create_post_on_topic?(closed_topic)).to eq(true)
+    end
+
+    it "does not affect site moderators" do
+      expect(Guardian.new(Fabricate(:moderator)).can_create_post_on_topic?(closed_topic)).to eq(
+        true,
+      )
+    end
+
+    it "is a no-op when the plugin is disabled" do
+      SiteSetting.mini_mod_enabled = false
       expect(Guardian.new(user).can_create_post_on_topic?(closed_topic)).to eq(true)
     end
 
-    context "when mini_mod_can_post_in_closed_topics is disabled" do
-      before { SiteSetting.mini_mod_can_post_in_closed_topics = false }
+    context "when mini_mod_can_post_in_closed_topics is enabled" do
+      before { SiteSetting.mini_mod_can_post_in_closed_topics = true }
 
-      it "blocks category group moderators from posting on closed topics they moderate" do
-        expect(Guardian.new(user).can_create_post_on_topic?(closed_topic)).to eq(false)
-      end
-
-      it "still allows category group moderators to post on open topics" do
-        expect(Guardian.new(user).can_create_post_on_topic?(open_topic)).to eq(true)
-      end
-
-      it "does not affect trust level 4 users" do
-        tl4_user = Fabricate(:user, trust_level: TrustLevel[4])
-        expect(Guardian.new(tl4_user).can_create_post_on_topic?(closed_topic)).to eq(true)
-      end
-
-      it "does not affect site moderators" do
-        expect(Guardian.new(Fabricate(:moderator)).can_create_post_on_topic?(closed_topic)).to eq(
-          true,
-        )
-      end
-
-      it "is a no-op when the plugin is disabled" do
-        SiteSetting.mini_mod_enabled = false
+      it "allows category group moderators to post on closed topics they moderate" do
         expect(Guardian.new(user).can_create_post_on_topic?(closed_topic)).to eq(true)
+      end
+    end
+  end
+
+  describe "#can_open_topic?" do
+    fab!(:closed_topic) { Fabricate(:topic, category: category, closed: true) }
+
+    it "blocks category group moderators from reopening closed topics by default" do
+      expect(Guardian.new(user).can_open_topic?(closed_topic)).to eq(false)
+    end
+
+    it "does not affect trust level 4 users" do
+      tl4_user = Fabricate(:user, trust_level: TrustLevel[4])
+      expect(Guardian.new(tl4_user).can_open_topic?(closed_topic)).to eq(true)
+    end
+
+    it "does not affect site moderators" do
+      expect(Guardian.new(Fabricate(:moderator)).can_open_topic?(closed_topic)).to eq(true)
+    end
+
+    it "is a no-op when the plugin is disabled" do
+      SiteSetting.mini_mod_enabled = false
+      expect(Guardian.new(user).can_open_topic?(closed_topic)).to eq(true)
+    end
+
+    context "when mini_mod_can_reopen_topics is enabled" do
+      before { SiteSetting.mini_mod_can_reopen_topics = true }
+
+      it "allows category group moderators to reopen closed topics they moderate" do
+        expect(Guardian.new(user).can_open_topic?(closed_topic)).to eq(true)
       end
     end
   end
