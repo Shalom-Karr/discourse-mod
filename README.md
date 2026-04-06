@@ -22,6 +22,7 @@ Optionally enable `mini_mod_manage_all_categories` to let them manage **all** ca
 | `mini_mod_enabled` | `false` | Enable the plugin |
 | `mini_mod_manage_all_categories` | `false` | Allow category group moderators to manage all categories and edit/move topics across all categories |
 | `mini_mod_manage_tags` | `false` | Allow category group moderators to create, edit, and delete tags |
+| `mini_mod_can_post_in_closed_topics` | `true` | Allow category group moderators to reply on closed topics in categories they moderate. Disable to revoke this core privilege; site staff and trust level 4 users are unaffected |
 
 All settings require Discourse core's `enable_category_group_moderation` to also be enabled. Tag management also requires `tagging_enabled`.
 

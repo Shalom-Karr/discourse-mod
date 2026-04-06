@@ -49,6 +49,15 @@ module DiscourseMiniMod
       can_see?(topic) && !topic.first_post&.locked?
     end
 
+    def can_create_post_on_topic?(topic)
+      if SiteSetting.mini_mod_enabled && !SiteSetting.mini_mod_can_post_in_closed_topics &&
+           topic.present? && topic.closed? && !is_staff? &&
+           !(authenticated? && user.has_trust_level?(TrustLevel[4]))
+        return false
+      end
+      super
+    end
+
     def can_move_topic_to_category?(category)
       return true if super
       return false if !SiteSetting.mini_mod_enabled

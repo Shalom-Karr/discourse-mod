@@ -73,10 +73,7 @@ RSpec.describe DiscourseMiniMod::GuardianExtensions do
     it "allows category group moderators" do
       guardian = Guardian.new(user)
       expect(
-        guardian.can_edit_serialized_category?(
-          category_id: category.id,
-          read_restricted: false,
-        ),
+        guardian.can_edit_serialized_category?(category_id: category.id, read_restricted: false),
       ).to eq(true)
     end
 
@@ -158,6 +155,43 @@ RSpec.describe DiscourseMiniMod::GuardianExtensions do
       it "does not allow moving to a category the user cannot see" do
         restricted = Fabricate(:category, read_restricted: true)
         expect(Guardian.new(user).can_move_topic_to_category?(restricted)).to eq(false)
+      end
+    end
+  end
+
+  describe "#can_create_post_on_topic?" do
+    fab!(:closed_topic) { Fabricate(:topic, category: category, closed: true) }
+    fab!(:open_topic) { Fabricate(:topic, category: category) }
+
+    it "preserves the core category-group-moderator privilege by default" do
+      expect(Guardian.new(user).can_create_post_on_topic?(closed_topic)).to eq(true)
+    end
+
+    context "when mini_mod_can_post_in_closed_topics is disabled" do
+      before { SiteSetting.mini_mod_can_post_in_closed_topics = false }
+
+      it "blocks category group moderators from posting on closed topics they moderate" do
+        expect(Guardian.new(user).can_create_post_on_topic?(closed_topic)).to eq(false)
+      end
+
+      it "still allows category group moderators to post on open topics" do
+        expect(Guardian.new(user).can_create_post_on_topic?(open_topic)).to eq(true)
+      end
+
+      it "does not affect trust level 4 users" do
+        tl4_user = Fabricate(:user, trust_level: TrustLevel[4])
+        expect(Guardian.new(tl4_user).can_create_post_on_topic?(closed_topic)).to eq(true)
+      end
+
+      it "does not affect site moderators" do
+        expect(Guardian.new(Fabricate(:moderator)).can_create_post_on_topic?(closed_topic)).to eq(
+          true,
+        )
+      end
+
+      it "is a no-op when the plugin is disabled" do
+        SiteSetting.mini_mod_enabled = false
+        expect(Guardian.new(user).can_create_post_on_topic?(closed_topic)).to eq(true)
       end
     end
   end

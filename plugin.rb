@@ -3,7 +3,7 @@
 # name: discourse-mini-mod
 # about: Allows category group moderators to create and edit categories
 # version: 0.1.0
-# authors: Discourse
+# authors: alltechdev
 # url: https://github.com/discourse/discourse-mini-mod
 # required_version: 2.7.0
 # enabled_site_setting: mini_mod_enabled
@@ -29,16 +29,16 @@ register_html_builder("server:before-head-close") do |controller|
   next "" if chunks.blank?
 
   nonce = controller.helpers.csp_nonce_placeholder
-  chunks.map do |script_name|
-    path = controller.helpers.script_asset_path(script_name)
-    %(<link rel="preload" href="#{path}" as="script" nonce="#{nonce}" data-discourse-entrypoint="admin">)
-  end.join("\n")
+  chunks
+    .map do |script_name|
+      path = controller.helpers.script_asset_path(script_name)
+      %(<link rel="preload" href="#{path}" as="script" nonce="#{nonce}" data-discourse-entrypoint="admin">)
+    end
+    .join("\n")
 end
 
 after_initialize do
-  reloadable_patch do
-    ::Guardian.prepend(DiscourseMiniMod::GuardianExtensions)
-  end
+  reloadable_patch { ::Guardian.prepend(DiscourseMiniMod::GuardianExtensions) }
 
   add_to_serializer(:current_user, :can_admin_tags) { scope.can_admin_tags? }
 
