@@ -2,6 +2,8 @@
 
 This compares a mini-mod user (all plugin settings enabled) with a Discourse moderator.
 
+> Looking for the trust level 4 restrictions instead? They're a separate, optional concern bundled in this plugin — see [trust-level-4.md](trust-level-4.md).
+
 ## Content organization
 
 | Ability | Moderator | Mini-mod | Notes |
