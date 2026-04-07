@@ -142,4 +142,67 @@ RSpec.describe "Topic status toggle for mini-mods" do
       expect(announcement.action_code).to eq("closed.disabled")
     end
   end
+
+  # Core lets TL4 users reopen any visible topic via
+  # Guardian::TopicGuardian#can_perform_action_available_to_group_moderators?.
+  # The tl4_can_reopen_topics setting clamps that down site-wide.
+  describe "trust level 4 users (not mini-mods)" do
+    fab!(:tl4_user, :trust_level_4)
+    fab!(:other_category, :category)
+    fab!(:closed_in_other_category) { Fabricate(:topic, category: other_category, closed: true) }
+
+    before { sign_in(tl4_user) }
+
+    context "with the default restriction (tl4_can_reopen_topics: false)" do
+      it "blocks TL4 users from reopening a closed topic in a mini-mod category" do
+        put "/t/#{closed_topic.id}/status.json", params: { status: "closed", enabled: "false" }
+        expect(response.status).to eq(403)
+        expect(closed_topic.reload.closed).to eq(true)
+      end
+
+      it "blocks TL4 users from reopening a closed topic in any other category too" do
+        put "/t/#{closed_in_other_category.id}/status.json",
+            params: {
+              status: "closed",
+              enabled: "false",
+            }
+        expect(response.status).to eq(403)
+        expect(closed_in_other_category.reload.closed).to eq(true)
+      end
+
+      it "still allows TL4 users to close an open topic (closing isn't restricted)" do
+        put "/t/#{open_topic.id}/status.json", params: { status: "closed", enabled: "true" }
+        expect(response.status).to eq(200)
+        expect(open_topic.reload.closed).to eq(true)
+      end
+    end
+
+    context "when tl4_can_reopen_topics is enabled" do
+      before { SiteSetting.tl4_can_reopen_topics = true }
+
+      it "allows TL4 users to reopen closed topics" do
+        put "/t/#{closed_in_other_category.id}/status.json",
+            params: {
+              status: "closed",
+              enabled: "false",
+            }
+        expect(response.status).to eq(200)
+        expect(closed_in_other_category.reload.closed).to eq(false)
+      end
+    end
+
+    context "when the plugin is disabled" do
+      before { SiteSetting.mini_mod_enabled = false }
+
+      it "falls back to core, which allows TL4 users to reopen closed topics" do
+        put "/t/#{closed_in_other_category.id}/status.json",
+            params: {
+              status: "closed",
+              enabled: "false",
+            }
+        expect(response.status).to eq(200)
+        expect(closed_in_other_category.reload.closed).to eq(false)
+      end
+    end
+  end
 end

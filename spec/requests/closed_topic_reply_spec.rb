@@ -120,4 +120,84 @@ RSpec.describe "Replying on closed topics as a mini-mod" do
       expect(response.status).to eq(200)
     end
   end
+
+  # Core lets any TL4 user reply on a closed topic via the "trusted" branch in
+  # Guardian::TopicGuardian#can_create_post_on_topic?. The tl4_can_post_in_closed_topics
+  # setting clamps that down site-wide, regardless of whether the topic is in a
+  # mini-mod category.
+  context "as a trust level 4 user (not a mini-mod)" do
+    fab!(:tl4_user) { Fabricate(:trust_level_4, refresh_auto_groups: true) }
+
+    context "with the default restriction (tl4_can_post_in_closed_topics: false)" do
+      before { sign_in(tl4_user) }
+
+      it "blocks the TL4 user from replying on a closed topic in a mini-mod category" do
+        expect {
+          post "/posts.json",
+               params: {
+                 raw: "tl4 trying to reply on a closed topic",
+                 topic_id: closed_topic.id,
+               }
+        }.not_to change { closed_topic.reload.posts_count }
+        expect(response.status).to eq(422)
+        expect(response.parsed_body["errors"]).to be_present
+      end
+
+      it "blocks the TL4 user from replying on a closed topic in any other category too" do
+        expect {
+          post "/posts.json",
+               params: {
+                 raw: "tl4 trying elsewhere",
+                 topic_id: closed_in_other_category.id,
+               }
+        }.not_to change { closed_in_other_category.reload.posts_count }
+        expect(response.status).to eq(422)
+      end
+
+      it "still allows the TL4 user to reply on open topics" do
+        expect {
+          post "/posts.json",
+               params: {
+                 raw: "tl4 replying on an open topic",
+                 topic_id: open_topic.id,
+               }
+        }.to change { open_topic.reload.posts_count }.by(1)
+        expect(response.status).to eq(200)
+      end
+    end
+
+    context "when tl4_can_post_in_closed_topics is enabled" do
+      before do
+        SiteSetting.tl4_can_post_in_closed_topics = true
+        sign_in(tl4_user)
+      end
+
+      it "allows the TL4 user to reply on closed topics anywhere" do
+        expect {
+          post "/posts.json",
+               params: {
+                 raw: "tl4 reply allowed",
+                 topic_id: closed_in_other_category.id,
+               }
+        }.to change { closed_in_other_category.reload.posts_count }.by(1)
+        expect(response.status).to eq(200)
+      end
+    end
+
+    context "when the plugin is disabled" do
+      before do
+        SiteSetting.mini_mod_enabled = false
+        sign_in(tl4_user)
+      end
+
+      it "falls back to core, which allows TL4 users to reply on closed topics" do
+        post "/posts.json",
+             params: {
+               raw: "plugin disabled tl4 reply",
+               topic_id: closed_in_other_category.id,
+             }
+        expect(response.status).to eq(200)
+      end
+    end
+  end
 end

@@ -14,6 +14,8 @@ discourse_mini_mod:
   mini_mod_can_reopen_topics:
     default: false
     client: false
+
+trust_level_4:
   tl4_can_post_in_closed_topics:
     default: false
     client: false

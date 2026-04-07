@@ -250,6 +250,171 @@ RSpec.describe DiscourseMiniMod::GuardianExtensions do
     end
   end
 
+  # The tl4_* settings clamp down trust level 4 users on closed topics across the
+  # whole site (not just in mini-mod categories). Without these guards, core lets
+  # any TL4 user reply on closed topics and reopen any visible topic — see
+  # Guardian::TopicGuardian#can_create_post_on_topic? and
+  # #can_perform_action_available_to_group_moderators?.
+  describe "TL4 closed-topic restrictions" do
+    fab!(:tl4_user, :trust_level_4)
+    fab!(:closed_topic) { Fabricate(:topic, category: category, closed: true) }
+    fab!(:open_topic) { Fabricate(:topic, category: category) }
+    fab!(:other_category, :category)
+    fab!(:closed_in_other_category) { Fabricate(:topic, category: other_category, closed: true) }
+
+    describe "#can_create_post_on_topic? with tl4_can_post_in_closed_topics" do
+      it "blocks TL4 users from posting on closed topics by default" do
+        expect(Guardian.new(tl4_user).can_create_post_on_topic?(closed_topic)).to eq(false)
+      end
+
+      it "blocks TL4 users from posting on closed topics in any category, not just mini-mod ones" do
+        expect(Guardian.new(tl4_user).can_create_post_on_topic?(closed_in_other_category)).to eq(
+          false,
+        )
+      end
+
+      it "still allows TL4 users to post on open topics" do
+        expect(Guardian.new(tl4_user).can_create_post_on_topic?(open_topic)).to eq(true)
+      end
+
+      it "does not affect site moderators" do
+        expect(Guardian.new(Fabricate(:moderator)).can_create_post_on_topic?(closed_topic)).to eq(
+          true,
+        )
+      end
+
+      it "does not affect admins" do
+        expect(Guardian.new(Fabricate(:admin)).can_create_post_on_topic?(closed_topic)).to eq(true)
+      end
+
+      it "is a no-op when the plugin is disabled" do
+        SiteSetting.mini_mod_enabled = false
+        expect(Guardian.new(tl4_user).can_create_post_on_topic?(closed_topic)).to eq(true)
+      end
+
+      context "when tl4_can_post_in_closed_topics is enabled" do
+        before { SiteSetting.tl4_can_post_in_closed_topics = true }
+
+        it "allows TL4 users to post on closed topics" do
+          expect(Guardian.new(tl4_user).can_create_post_on_topic?(closed_topic)).to eq(true)
+        end
+
+        it "allows TL4 users to post on closed topics outside any mini-mod category" do
+          expect(Guardian.new(tl4_user).can_create_post_on_topic?(closed_in_other_category)).to eq(
+            true,
+          )
+        end
+      end
+    end
+
+    describe "#can_close_topic? with tl4_can_reopen_topics" do
+      it "still allows TL4 users to close open topics" do
+        expect(Guardian.new(tl4_user).can_close_topic?(open_topic)).to eq(true)
+      end
+
+      it "blocks TL4 users from reopening closed topics by default" do
+        expect(Guardian.new(tl4_user).can_close_topic?(closed_topic)).to eq(false)
+      end
+
+      it "blocks TL4 users from reopening closed topics in any category" do
+        expect(Guardian.new(tl4_user).can_close_topic?(closed_in_other_category)).to eq(false)
+      end
+
+      it "does not affect site moderators" do
+        expect(Guardian.new(Fabricate(:moderator)).can_close_topic?(closed_topic)).to eq(true)
+      end
+
+      it "does not affect admins" do
+        expect(Guardian.new(Fabricate(:admin)).can_close_topic?(closed_topic)).to eq(true)
+      end
+
+      it "is a no-op when the plugin is disabled" do
+        SiteSetting.mini_mod_enabled = false
+        expect(Guardian.new(tl4_user).can_close_topic?(closed_topic)).to eq(true)
+      end
+
+      context "when tl4_can_reopen_topics is enabled" do
+        before { SiteSetting.tl4_can_reopen_topics = true }
+
+        it "allows TL4 users to reopen closed topics" do
+          expect(Guardian.new(tl4_user).can_close_topic?(closed_topic)).to eq(true)
+        end
+      end
+    end
+
+    describe "#can_open_topic? with tl4_can_reopen_topics" do
+      it "blocks TL4 users from reopening closed topics by default" do
+        expect(Guardian.new(tl4_user).can_open_topic?(closed_topic)).to eq(false)
+      end
+
+      it "blocks TL4 users from reopening closed topics in any category" do
+        expect(Guardian.new(tl4_user).can_open_topic?(closed_in_other_category)).to eq(false)
+      end
+
+      it "does not affect site moderators" do
+        expect(Guardian.new(Fabricate(:moderator)).can_open_topic?(closed_topic)).to eq(true)
+      end
+
+      it "does not affect admins" do
+        expect(Guardian.new(Fabricate(:admin)).can_open_topic?(closed_topic)).to eq(true)
+      end
+
+      it "is a no-op when the plugin is disabled" do
+        SiteSetting.mini_mod_enabled = false
+        expect(Guardian.new(tl4_user).can_open_topic?(closed_topic)).to eq(true)
+      end
+
+      context "when tl4_can_reopen_topics is enabled" do
+        before { SiteSetting.tl4_can_reopen_topics = true }
+
+        it "allows TL4 users to reopen closed topics" do
+          expect(Guardian.new(tl4_user).can_open_topic?(closed_topic)).to eq(true)
+        end
+      end
+    end
+
+    # A TL4 user who is *also* a mini-mod for a category is gated by both the
+    # tl4_* setting and the mini_mod_* setting. Both must be enabled for them to
+    # post on / reopen closed topics.
+    describe "TL4 user who is also a mini-mod" do
+      fab!(:tl4_mini_mod, :trust_level_4)
+
+      before { group.add(tl4_mini_mod) }
+
+      it "is still blocked from posting on closed topics they moderate by default" do
+        expect(Guardian.new(tl4_mini_mod).can_create_post_on_topic?(closed_topic)).to eq(false)
+      end
+
+      it "is still blocked when only the mini_mod setting is enabled" do
+        SiteSetting.mini_mod_can_post_in_closed_topics = true
+        expect(Guardian.new(tl4_mini_mod).can_create_post_on_topic?(closed_topic)).to eq(false)
+      end
+
+      it "is still blocked when only the tl4 setting is enabled" do
+        SiteSetting.tl4_can_post_in_closed_topics = true
+        expect(Guardian.new(tl4_mini_mod).can_create_post_on_topic?(closed_topic)).to eq(false)
+      end
+
+      it "can post on closed topics when both settings are enabled" do
+        SiteSetting.mini_mod_can_post_in_closed_topics = true
+        SiteSetting.tl4_can_post_in_closed_topics = true
+        expect(Guardian.new(tl4_mini_mod).can_create_post_on_topic?(closed_topic)).to eq(true)
+      end
+
+      it "is still blocked from reopening closed topics they moderate by default" do
+        expect(Guardian.new(tl4_mini_mod).can_close_topic?(closed_topic)).to eq(false)
+        expect(Guardian.new(tl4_mini_mod).can_open_topic?(closed_topic)).to eq(false)
+      end
+
+      it "can reopen closed topics when both reopen settings are enabled" do
+        SiteSetting.mini_mod_can_reopen_topics = true
+        SiteSetting.tl4_can_reopen_topics = true
+        expect(Guardian.new(tl4_mini_mod).can_close_topic?(closed_topic)).to eq(true)
+        expect(Guardian.new(tl4_mini_mod).can_open_topic?(closed_topic)).to eq(true)
+      end
+    end
+  end
+
   context "with mini_mod_manage_tags enabled" do
     before do
       SiteSetting.tagging_enabled = true

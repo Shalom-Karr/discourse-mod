@@ -1,0 +1,7 @@
+en:
+  admin_js:
+    admin:
+      site_settings:
+        categories:
+          discourse_mini_mod: "Discourse Mini Mod"
+          trust_level_4: "Trust Level 4"
