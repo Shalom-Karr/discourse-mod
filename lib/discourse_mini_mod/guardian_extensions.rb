@@ -50,7 +50,7 @@ module DiscourseMiniMod
     end
 
     def can_create_post_on_topic?(topic)
-      if SiteSetting.mini_mod_enabled && !SiteSetting.mini_mod_tl4_can_post_in_closed_topics &&
+      if SiteSetting.mini_mod_enabled && !SiteSetting.tl4_can_post_in_closed_topics &&
            topic.present? && topic.closed? && !is_staff? && @user.has_trust_level?(TrustLevel[4])
         return false
       end
@@ -62,6 +62,10 @@ module DiscourseMiniMod
     end
 
     def can_open_topic?(topic)
+      if SiteSetting.mini_mod_enabled && !SiteSetting.tl4_can_reopen_topics &&
+           topic.present? && !is_staff? && @user.has_trust_level?(TrustLevel[4])
+        return false
+      end
       if SiteSetting.mini_mod_enabled && !SiteSetting.mini_mod_can_reopen_topics &&
            topic.present? && !is_staff? && mini_mod_for?(topic)
         return false
@@ -75,6 +79,10 @@ module DiscourseMiniMod
     # when the topic is already closed — in that case, the action is a reopen, which
     # we want to revoke from category group moderators by default.
     def can_close_topic?(topic)
+      if SiteSetting.mini_mod_enabled && !SiteSetting.tl4_can_reopen_topics &&
+           topic.present? && topic.closed? && !is_staff? && @user.has_trust_level?(TrustLevel[4])
+        return false
+      end
       if SiteSetting.mini_mod_enabled && !SiteSetting.mini_mod_can_reopen_topics &&
            topic.present? && topic.closed? && !is_staff? && mini_mod_for?(topic)
         return false

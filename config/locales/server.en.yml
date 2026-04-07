@@ -5,3 +5,5 @@ en:
     mini_mod_manage_tags: "Allow category group moderators to create, edit, and delete tags."
     mini_mod_can_post_in_closed_topics: "Allow category group moderators to reply on closed topics in categories they moderate. Disabled by default; site staff are unaffected."
     mini_mod_can_reopen_topics: "Allow category group moderators to reopen closed topics in categories they moderate. Disabled by default; site staff are unaffected."
+    tl4_can_post_in_closed_topics: "Allow trust level 4 users to reply on closed topics. Disabled by default; site staff are unaffected."
+    tl4_can_reopen_topics: "Allow trust level 4 users to reopen closed topics. Disabled by default; site staff are unaffected."
