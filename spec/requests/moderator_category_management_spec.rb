@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
+require "rails_helper"
+
 # End-to-end coverage for the moderator category-management feature. Hits the
 # actual /categories.json endpoints as a moderator and verifies the plugin's
 # Guardian overrides correctly grant create/edit/delete permissions.
-RSpec.describe "Category management for moderators" do
+RSpec.describe "Category management for moderators", type: :request do
   fab!(:moderator)
   fab!(:user)
   fab!(:category)

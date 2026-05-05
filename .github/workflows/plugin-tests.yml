@@ -1,0 +1,101 @@
+name: Plugin Tests
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  rspec:
+    name: RSpec
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: discourse
+          POSTGRES_PASSWORD: discourse
+          POSTGRES_DB: discourse_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      RAILS_ENV: test
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: discourse
+      PGPASSWORD: discourse
+      DISCOURSE_DEV_DB: discourse_test
+      LOAD_PLUGINS: 1
+      DISCOURSE_REDIS_URL: redis://127.0.0.1:6379
+      REDIS_URL: redis://127.0.0.1:6379
+      DISCOURSE_DB_HOST: 127.0.0.1
+      DISCOURSE_DB_USERNAME: discourse
+      DISCOURSE_DB_PASSWORD: discourse
+
+    steps:
+      - name: Checkout Discourse
+        uses: actions/checkout@v4
+        with:
+          repository: discourse/discourse
+          path: discourse
+
+      - name: Checkout plugin
+        uses: actions/checkout@v4
+        with:
+          path: discourse/plugins/discourse-mod
+
+      - name: Set up Ruby 3.4
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: false
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libpq-dev libssl-dev imagemagick
+
+      - name: Start Redis
+        run: |
+          sudo apt-get install -y redis-server
+          sudo service redis-server start
+          redis-cli ping
+
+      - name: Set up Node and pnpm
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install JS dependencies
+        working-directory: discourse
+        run: pnpm install
+
+      - name: Bundle install
+        working-directory: discourse
+        run: bundle install --jobs 4 --retry 3
+
+      - name: Set up database
+        working-directory: discourse
+        run: bundle exec rake db:create db:migrate
+
+      - name: Run plugin specs
+        working-directory: discourse
+        run: |
+          bundle exec rspec plugins/discourse-mod/spec \
+            --format documentation
