@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# name: discourse-mod-categories
+# name: discourse-mod
 # about: Allows moderators to create, edit, and delete categories
 # version: 0.1.0
 # authors: alltechdev
