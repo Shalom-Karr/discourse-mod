@@ -1,24 +1,4 @@
-discourse_mini_mod:
-  mini_mod_enabled:
+discourse_mod_categories:
+  mod_categories_enabled:
     default: false
     client: true
-  mini_mod_manage_all_categories:
-    default: false
-    client: true
-  mini_mod_manage_tags:
-    default: false
-    client: true
-  mini_mod_can_post_in_closed_topics:
-    default: false
-    client: false
-  mini_mod_can_reopen_topics:
-    default: false
-    client: false
-
-trust_level_4:
-  tl4_can_post_in_closed_topics:
-    default: false
-    client: false
-  tl4_can_reopen_topics:
-    default: false
-    client: false

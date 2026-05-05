@@ -1,61 +1,43 @@
-# Mini-mods vs Moderators
+# Moderators vs Admins
 
-This compares a mini-mod user (all plugin settings enabled) with a Discourse moderator.
+This compares a Discourse moderator with the plugin enabled against a Discourse admin.
 
-> Looking for the trust level 4 restrictions instead? They're a separate, optional concern bundled in this plugin — see [trust-level-4.md](trust-level-4.md).
+The plugin only extends category create/edit/delete to moderators. Every other moderator/admin capability is unchanged from core.
 
 ## Content organization
 
-| Ability | Moderator | Mini-mod | Notes |
-|---------|-----------|----------|-------|
-| Create/edit/delete categories | All | All | Plugin feature |
-| Create/edit/delete tags | All | All (not tag groups) | Plugin feature |
-| Edit topics (title, content) | All | All visible | Core in moderated categories; plugin extends to all with manage-all |
-| Bulk change topic category | All | All visible | Plugin feature |
-| Reorder categories | Yes | Yes | Plugin feature |
+| Ability | Admin | Moderator (with plugin) | Source |
+|---------|-------|-------------------------|--------|
+| Create categories | All | All | Plugin |
+| Edit categories | All | All | Plugin |
+| Delete categories | All (empty) | All (empty, no children) | Plugin |
+| Create/edit/delete tags | Yes | Yes | Core |
+| Edit topics | Yes | Yes | Core |
+| Bulk change topic category | Yes | Yes | Core |
 
 ## Topic moderation
 
-| Ability | Moderator | Mini-mod | Notes |
-|---------|-----------|----------|-------|
-| Close topics | All | Moderated categories only | Core feature, not extended by plugin |
-| Reopen closed topics | All | Blocked by default | Plugin revokes; opt in via `mini_mod_can_reopen_topics` |
-| Reply on closed topics | All | Blocked by default | Plugin revokes; opt in via `mini_mod_can_post_in_closed_topics` |
-| Archive topics | All | Moderated categories only | Core feature |
-| Pin/unpin topics | All | Moderated categories only | Core feature |
-| Unlist/relist topics | All | Moderated categories only | Core feature |
-| Split/merge topics | All | Moderated categories only | Core feature |
-| Move posts | All | Moderated categories only | Core feature |
-| Delete topics/posts | Yes | No | |
-| Lock posts | Yes | No | |
-| Edit staff notes | All | Moderated categories only | Core feature |
-| Convert topic to/from PM | Yes | No | |
+| Ability | Admin | Moderator | Source |
+|---------|-------|-----------|--------|
+| Close / reopen topics | Yes | Yes | Core |
+| Reply on closed topics | Yes | Yes | Core |
+| Archive / pin / unlist topics | Yes | Yes | Core |
+| Split / merge topics | Yes | Yes | Core |
+| Move posts | Yes | Yes | Core |
+| Delete topics / posts | Yes | Yes | Core |
 
-`manage_all_categories` does **not** extend these core moderation abilities beyond moderated categories.
+## User and site administration
 
-## User management
-
-| Ability | Moderator | Mini-mod |
-|---------|-----------|----------|
-| Suspend users | Yes | No |
-| Silence users | Yes | No |
-| Send official warnings | Yes | No |
-| Approve/reject users | Yes | No |
-| Anonymize users | Yes | No |
-| View user emails/IPs | Yes | No |
-| View user activity in detail | Yes | No |
-
-## Site administration
-
-| Ability | Moderator | Mini-mod |
-|---------|-----------|----------|
-| Access admin panel | Yes | No |
-| Review queue / manage flags | Yes | No |
-| View deleted content | Yes | No |
-| Manage tag groups | Yes | No |
-| View staff action logs | Yes | No |
-| Manage site settings | No (admin only) | No |
+| Ability | Admin | Moderator |
+|---------|-------|-----------|
+| Suspend / silence users | Yes | Yes |
+| Review queue / handle flags | Yes | Yes |
+| View deleted content | Yes | Yes |
+| Access admin panel | Yes | Yes (limited) |
+| Manage site settings | Yes | No |
+| Install plugins | Yes | No |
+| Manage admin users | Yes | No |
 
 ## Summary
 
-Mini-mods are **content organizers** — they can manage categories, tags, and move topics around. Moderators are **rule enforcers** — they can manage users, handle flags, and take disciplinary action. The plugin bridges the gap for teams that need people organizing content without giving them full moderation power.
+The plugin closes a single specific gap in core: moderators can manage almost every aspect of the forum, but cannot create, edit, or delete categories themselves. With this plugin enabled, they can — without elevating them to full admins.
