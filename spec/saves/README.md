@@ -36,6 +36,7 @@ The variants are split by which Discourse code path they exercise:
 | `settings_save_spec.rb` | position, sort_order, search_priority, auto_close_hours, default_view, etc. |
 | `parent_change_spec.rb` | reparenting a category |
 | `create_variants_spec.rb` | `POST /categories.json` with each of the above shapes |
+| `approval_save_spec.rb` | "Require moderator approval on new topics" — every known param shape, plus `reviewable_by_group_id`. The "except TL3" half is the site setting `approve_new_topics_unless_trust_level`, admin-only and out of scope for the category save. |
 
 Each spec runs the same save as an admin as a control — if the admin save also 500s, the bug is in core/another plugin, not us.
 
