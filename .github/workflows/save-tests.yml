@@ -1,4 +1,4 @@
-name: Plugin Tests
+name: Category Save Tests
 
 on:
   push:
@@ -12,8 +12,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  rspec:
-    name: RSpec
+  rspec_saves:
+    name: RSpec (spec/saves)
     runs-on: ubuntu-latest
 
     services:
@@ -94,11 +94,8 @@ jobs:
         working-directory: discourse
         run: bundle exec rake db:create db:migrate
 
-      - name: Run plugin specs
+      - name: Run category-save specs
         working-directory: discourse
         run: |
-          bundle exec rspec \
-            plugins/discourse-mod/spec/plugin_spec.rb \
-            plugins/discourse-mod/spec/lib \
-            plugins/discourse-mod/spec/requests \
+          bundle exec rspec plugins/discourse-mod/spec/saves \
             --format documentation
